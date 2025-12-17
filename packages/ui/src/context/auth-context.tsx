@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { Api, type User } from "@repo/api/account";
 import { Axosec } from "@repo/core";
-import { fromBase64 } from "../utils";
+import { fromBase64 } from "@repo/core/utils";
 
 type AuthStatus = "LOADING" | "UNAUTHENTICATED" | "LOCKED" | "AUTHENTICATED";
 
@@ -18,10 +18,9 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-const api = Api.getInstance(import.meta.env.VITE_API_URL);
 const axo = Axosec.getInstance();
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, api }: { children: ReactNode, api: Api }) {
   const [state, setState] = useState<AuthState>({
     status: "LOADING",
     user: null,

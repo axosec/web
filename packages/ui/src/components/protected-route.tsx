@@ -1,10 +1,17 @@
 import { useState, type JSX } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth-context";
-import { Dialog } from "./dialog";
-import "./protected-route.css";
-import { Button } from "./button";
-import { Form, Input } from "./form";
+import { useAuth } from "@repo/ui/context/auth-context";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@repo/ui/components/ui/dialog";
+import { Button } from "@repo/ui/components/ui/button";
+import { Input } from "@repo/ui/components/ui/input";
 
 export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { status, user, unlock, logout } = useAuth();
@@ -23,23 +30,22 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   }
 
   if (status === "LOCKED") {
-
     const handleUnlock = async () => {
       setError("");
       setIsUnlocking(true);
       try {
         await unlock(password);
-      } catch (e: any) {
+      } catch {
         setError("Incorrect password. Please try again.");
       } finally {
         setIsUnlocking(false);
       }
     };
 
-    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      handleUnlock()
-    }
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleUnlock();
+    };
 
     const handleClose = () => {
       logout();
@@ -47,49 +53,51 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
     };
 
     return (
-      <div className="lock-screen">
-        <p>Session Locked. Authentication required.</p>
+      <Dialog open onOpenChange={(open: boolean) => !open && handleClose()}>
+        <DialogContent
+          className="sm:max-w-md"
+        >
+          <DialogHeader>
+            <DialogTitle>Unlock Vault</DialogTitle>
+            <DialogDescription>
+              Your session is active, but your keys are locked.
+              Enter your Master Password{" "}
+              {user?.email ? `for ${user.email}` : ""} to continue.
+            </DialogDescription>
+          </DialogHeader>
 
-        <Dialog
-          open={true}
-          onClose={handleClose}
-          title="Unlock Vault"
-          footer={
-            <div className="lock-footer">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Master Password"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              autoFocus
+            />
+
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
+
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button
+                type="button"
+                variant="ghost"
                 onClick={handleClose}
               >
                 Cancel
               </Button>
+
               <Button
-                onClick={handleUnlock}
-                variant="secondary"
+                type="submit"
                 disabled={isUnlocking}
               >
                 {isUnlocking ? "Unlocking..." : "Unlock"}
               </Button>
-            </div>
-          }
-        >
-          <div className="lock-dialog-body">
-            <p className="lock-description">
-              Your session is active, but your keys are locked.
-              Enter your Master Password {"for " + user?.email || ""} to continue.
-            </p>
-
-            <Form className="lock-input-container" onSubmit={handleFormSubmit}>
-              <Input
-                type="password"
-                placeholder="Master Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoFocus
-              />
-              {error && <p className="lock-error">{error}</p>}
-            </Form>
-          </div>
-        </Dialog>
-      </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     );
   }
 
