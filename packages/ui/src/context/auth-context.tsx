@@ -53,8 +53,8 @@ export function AuthProvider({ children, api }: { children: ReactNode, api: Api 
       const saltBytes = fromBase64(state.user.salt);
       const masterKey = await axo.deriveKey(password, saltBytes);
 
-      const encKeyBytes = fromBase64(state.user.enc_private_key);
-      const privateKey = await axo.decrypt(encKeyBytes, masterKey);
+      const encKeyBytes = fromBase64(state.user.enc_vault_private_key);
+      const privateKey = await axo.decrypt(encKeyBytes, fromBase64(state.user.vault_private_key_nonce), masterKey);
 
       setState(s => ({
         ...s,

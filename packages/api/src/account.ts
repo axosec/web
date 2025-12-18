@@ -1,10 +1,17 @@
 export interface RegisterRequest {
   email: string;
   username: string;
+
   salt: string;
   auth_verifier: string;
-  public_key: string;
-  enc_private_key: string;
+
+  identity_public_key: string;
+  enc_identity_private_key: string;
+  identity_private_key_nonce: string;
+
+  vault_public_key: string;
+  enc_vault_private_key: string;
+  vault_private_key_nonce: string;
 }
 
 export interface InitLoginRequest {
@@ -21,13 +28,20 @@ export interface LoginRequest {
 }
 
 export interface User {
-  id: string
+  id: string;
   email: string;
   username: string;
+
   salt: string;
   auth_verifier: string;
-  public_key: string;
-  enc_private_key: string;
+
+  identity_public_key: string;
+  enc_identity_private_key: string;
+  identity_private_key_nonce: string;
+
+  vault_public_key: string;
+  enc_vault_private_key: string;
+  vault_private_key_nonce: string;
 }
 
 export class Api {

@@ -55,7 +55,7 @@ export function LoginPage() {
       try {
         console.log("Starting Login...");
 
-        const init = await api.loginInit({ "email": value.email })
+        const init = await api.loginInit({ email: value.email })
 
         const masterKey = await axo.deriveKey(value.password, fromBase64(init.salt));
 
@@ -63,8 +63,8 @@ export function LoginPage() {
 
         const user = await api.login({ email: value.email, auth_verifier: toBase64(authHash) })
 
-        const encKeyBytes = fromBase64(user.enc_private_key);
-        const privateKey = await axo.decrypt(encKeyBytes, masterKey);
+        const encKeyBytes = fromBase64(user.enc_vault_private_key);
+        const privateKey = await axo.decrypt(encKeyBytes, fromBase64(user.vault_private_key_nonce), masterKey);
 
         login(user, privateKey)
         toast.success("Login Successful!")

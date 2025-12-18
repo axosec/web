@@ -65,17 +65,29 @@ export function RegisterPage() {
       try {
         const salt = await axo.generateSalt(32);
         const masterKey = await axo.deriveKey(value.password, salt);
-        const identity = await axo.generateIdentity();
-        const encPrivateKey = await axo.encrypt(identity.private, masterKey);
+
+        const identity = await axo.generateSignKey();
+        const encIdentity = await axo.encrypt(identity.private, masterKey);
+
+        const vault = await axo.generateVaultKey();
+        const encVault = await axo.encrypt(vault.private, masterKey);
+
         const authHash = await sha512(masterKey);
 
         const payload: RegisterRequest = {
           email: value.email,
           username: value.username,
+
           salt: toBase64(salt),
           auth_verifier: toBase64(authHash),
-          public_key: toBase64(identity.public),
-          enc_private_key: toBase64(encPrivateKey),
+
+          identity_public_key: toBase64(identity.public),
+          enc_identity_private_key: toBase64(encIdentity.data),
+          identity_private_key_nonce: toBase64(encIdentity.nonce),
+
+          vault_public_key: toBase64(vault.public),
+          enc_vault_private_key: toBase64(encVault.data),
+          vault_private_key_nonce: toBase64(encVault.nonce),
         };
 
         await api.register(payload);
