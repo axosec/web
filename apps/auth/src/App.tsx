@@ -4,7 +4,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { HomePage } from "./pages/HomePage";
 import { ProtectedRoute } from "@repo/ui/components/protected-route";
 import { AuthProvider } from "@repo/ui/context/auth-context";
-import { Api } from "@repo/api/account";
+import { AccountApi } from "@repo/api/account";
 import AppSidebar, { type ItemProps } from "@repo/ui/components/app-sidebar";
 import { ThemeProvider } from "@repo/ui/components/theme-provider";
 import { House, KeyRound, User } from "lucide-react";
@@ -13,7 +13,7 @@ import { SidebarProvider, SidebarTrigger } from "@repo/ui/components/ui/sidebar"
 
 import { Separator } from "@repo/ui/components/ui/separator";
 
-const api = Api.getInstance(import.meta.env.VITE_API_URL);
+const api = AccountApi.getInstance(import.meta.env.VITE_API_URL);
 
 const navGroups: ItemProps = [
   {

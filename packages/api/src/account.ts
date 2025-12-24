@@ -44,19 +44,19 @@ export interface User {
   vault_private_key_nonce: string;
 }
 
-export class Api {
-  private static instance: Api;
+export class AccountApi {
+  private static instance: AccountApi;
   private baseUrl: string;
 
   private constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
-  static getInstance(baseUrl: string): Api {
-    if (!Api.instance) {
-      Api.instance = new Api(baseUrl);
+  static getInstance(baseUrl: string): AccountApi {
+    if (!AccountApi.instance) {
+      AccountApi.instance = new AccountApi(baseUrl);
     }
-    return Api.instance;
+    return AccountApi.instance;
   }
 
   async register(data: RegisterRequest) {

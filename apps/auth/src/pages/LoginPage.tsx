@@ -1,4 +1,4 @@
-import { Api } from "@repo/api/account";
+import { AccountApi } from "@repo/api/account";
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { useForm } from "@tanstack/react-form";
 
-const api = Api.getInstance(import.meta.env.VITE_API_URL);
+const api = AccountApi.getInstance(import.meta.env.VITE_API_URL);
 
 const formSchema = z
   .object({
@@ -98,10 +98,10 @@ export function LoginPage() {
 
         <CardContent>
           <form
-            id="register-form"
+            id="login-form"
             onSubmit={(e) => {
               e.preventDefault();
-              void form.handleSubmit();
+              form.handleSubmit();
             }}
           >
             <FieldGroup>
@@ -180,17 +180,12 @@ export function LoginPage() {
             <form.Subscribe
               selector={(state) => [state.isSubmitting, state.isDirty] as const}
               children={([isSubmitting, isDirty]) => (
-
-                  <Button type="submit" form="register-form" disabled={isSubmitting || !isDirty}>
-                    {(isSubmitting && !isDirty) ? "Logging in..." : "Login"}
-                  </Button>
+                <Button type="submit" form="login-form" disabled={isSubmitting || !isDirty}>
+                  {(isSubmitting && !isDirty) ? "Logging in..." : "Login"}
+                </Button>
               )}
             />
-
-
           </Field>
-
-
         </CardFooter>
       </Card>
     </div>

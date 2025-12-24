@@ -80,13 +80,11 @@ export class Axosec {
   }
 
   // --- VAULT (Symmetric) ---
-  // Returns object { data, nonce } to save to DB
   async encrypt(data: Uint8Array, key: Uint8Array): Promise<CipherResult> {
     await this.loaded;
     return unwrap(window.AxoVaultEncrypt(data, key));
   }
 
-  // Requires separate nonce from DB
   async decrypt(data: Uint8Array, nonce: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
     await this.loaded;
     return unwrap(window.AxoVaultDecrypt(data, nonce, key));

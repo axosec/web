@@ -1,4 +1,4 @@
-import { Api, type RegisterRequest } from "@repo/api/account";
+import { AccountApi, type RegisterRequest } from "@repo/api/account";
 import { Axosec } from "@repo/core";
 import { toBase64, sha512 } from "@repo/core/utils";
 import { Link, useNavigate } from "react-router-dom";
@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import * as z from "zod";
 import { useForm } from "@tanstack/react-form";
 
-const api = Api.getInstance(import.meta.env.VITE_API_URL);
+const api = AccountApi.getInstance(import.meta.env.VITE_API_URL);
 const axo = Axosec.getInstance();
 
 const formSchema = z
@@ -126,7 +126,7 @@ export function RegisterPage() {
             id="register-form"
             onSubmit={(e) => {
               e.preventDefault();
-              void form.handleSubmit();
+              form.handleSubmit();
             }}
           >
             <FieldGroup>
@@ -284,11 +284,7 @@ export function RegisterPage() {
                 </>
               )}
             />
-
-
           </Field>
-
-
         </CardFooter>
       </Card>
     </div>
