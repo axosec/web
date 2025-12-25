@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { Api, type User } from "@repo/api/account";
+import { AccountApi, type User } from "@repo/api/account";
 import { Axosec } from "@repo/core";
 import { fromBase64 } from "@repo/core/utils";
 
@@ -20,7 +20,7 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | null>(null);
 const axo = Axosec.getInstance();
 
-export function AuthProvider({ children, api }: { children: ReactNode, api: Api }) {
+export function AuthProvider({ children, api }: { children: ReactNode, api: AccountApi }) {
   const [state, setState] = useState<AuthState>({
     status: "LOADING",
     user: null,

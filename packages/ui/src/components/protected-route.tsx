@@ -13,7 +13,7 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 
-export function ProtectedRoute({ children }: { children: JSX.Element }) {
+export function ProtectedRoute({ loginRedirect = "/login", children }: { loginRedirect?: string, children: JSX.Element }) {
   const { status, user, unlock, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -26,7 +26,15 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   }
 
   if (status === "UNAUTHENTICATED") {
-    return <Navigate to="/login" replace />;
+    const url = loginRedirect;
+
+    const isExternal = /^https?:\/\//i.test(url);
+
+    if (isExternal) {
+      window.location.assign(url);
+      return null;
+    }
+    return <Navigate to={loginRedirect} replace />;
   }
 
   if (status === "LOCKED") {
@@ -49,7 +57,15 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
 
     const handleClose = () => {
       logout();
-      navigate("/login");
+      const url = loginRedirect;
+
+      const isExternal = /^https?:\/\//i.test(url);
+
+      if (isExternal) {
+        window.location.assign(url);
+        return null;
+      }
+      navigate(loginRedirect);
     };
 
     return (
@@ -71,7 +87,7 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
               type="password"
               placeholder="Master Password"
               value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               autoFocus
             />
 
