@@ -7,6 +7,11 @@ export interface CreateFolderRequest {
   enc_key: string;
 }
 
+export interface UpdateFolderRequest {
+  nonce: string;
+  enc_metadata: string;
+}
+
 export interface FolderResponse {
   id: string;
 }
@@ -116,7 +121,16 @@ export class VaultApi {
       return {} as T;
     }
 
-    return await response.json();
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {} as T;
+    }
   }
 
   // Folder Operations
@@ -131,6 +145,13 @@ export class VaultApi {
   async listFolders(): Promise<FolderSummary[]> {
     return this.request<FolderSummary[]>("/folders", {
       method: "GET",
+    });
+  }
+
+  async updateFolder(id: string, data: UpdateFolderRequest): Promise<void> {
+    return this.request<void>(`/folders/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 

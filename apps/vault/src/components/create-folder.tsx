@@ -1,4 +1,5 @@
 import * as z from "zod"
+import { useEffect } from "react"
 import { useForm } from "@tanstack/react-form"
 import {
   Dialog,
@@ -21,6 +22,7 @@ interface CreateFolderDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (meta: FolderMetadata) => Promise<void>
+  initialData?: FolderMetadata
 }
 
 const folderSchema = z.object({
@@ -33,13 +35,14 @@ export function CreateFolderDialog({
   open,
   onOpenChange,
   onSubmit,
+  initialData,
 }: CreateFolderDialogProps) {
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      color: "default",
-      icon: "default",
+      name: initialData?.name ?? "",
+      color: initialData?.color ?? "default",
+      icon: initialData?.icon ?? "default",
     },
     validators: {
       onChange: folderSchema,
@@ -56,6 +59,7 @@ export function CreateFolderDialog({
     },
   })
 
+
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       form.reset()
@@ -70,9 +74,9 @@ export function CreateFolderDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Folder</DialogTitle>
+          <DialogTitle>{initialData ? "Edit Folder" : "Create New Folder"}</DialogTitle>
           <DialogDescription>
-            Customize your folder. Metadata is encrypted client-side.
+            {initialData ? "Update your folder details." : "Customize your folder."} Metadata is encrypted client-side.
           </DialogDescription>
         </DialogHeader>
 
@@ -141,7 +145,7 @@ export function CreateFolderDialog({
             {(field) => (
               <div className="space-y-2">
                 <Label>Icon</Label>
-                <ScrollArea className="h-[120px] rounded-md border p-2">
+                <ScrollArea className="h-[150px] rounded-md border p-2">
                   <div className="grid grid-cols-5 gap-2">
                     {FOLDER_ICONS.map(({ id, icon: Icon }) => (
                       <button
@@ -184,7 +188,7 @@ export function CreateFolderDialog({
                       Encrypting...
                     </>
                   ) : (
-                    "Create Folder"
+                    initialData ? "Save Changes" : "Create Folder"
                   )}
                 </Button>
               )}

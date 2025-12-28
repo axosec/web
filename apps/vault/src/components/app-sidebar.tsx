@@ -1,10 +1,12 @@
 import type { FolderSummary } from "@repo/api/vault"
 import { Axosec } from "@repo/core";
 import { fromBase64 } from "@repo/core/utils";
+import { Button } from "@repo/ui/components/ui/button";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarInput, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@repo/ui/components/ui/sidebar";
-import { useEffect } from "react";
-import { ChevronsUpDown, Command, Folder, Inbox, Plus } from "lucide-react"
+import { useEffect, useState } from "react";
+import { ChevronsUpDown, Command, Folder, Inbox, Plus, Trash2, Pencil } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@repo/ui/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@repo/ui/components/ui/alert-dialog";
 import { ThemeSelector } from "@repo/ui/components/theme-selector";
 import { FOLDER_COLORS, FOLDER_ICONS, type FolderMetadata } from "./folder-options";
 
@@ -71,14 +73,19 @@ export function AppSidebar({
   activeItem,
   setActiveItem,
   onCreateFolder,
+  onEditFolder,
+  onDeleteFolder,
   ...props
 }: {
   folders: FolderNode[]
   activeItem: FolderNode | null
   setActiveItem: (item: FolderNode) => void
   onCreateFolder: () => void
+  onEditFolder: (folder: FolderNode) => void
+  onDeleteFolder: (folderId: string) => Promise<void>
 } & React.ComponentProps<typeof Sidebar>) {
   const { setOpen } = useSidebar()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (folders.length > 0 && !activeItem) {
@@ -176,6 +183,37 @@ export function AppSidebar({
             <div className="text-foreground text-base font-medium">
               {activeItem ? activeItem.name : "Select a Folder"}
             </div>
+            {activeItem && (
+              <div>
+                <Button variant="ghost" size="icon-sm" onClick={() => activeItem && onEditFolder(activeItem)}>
+                  <Pencil />
+                </Button>
+                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                  <AlertDialogTrigger render={<Button variant="ghost" size="icon-sm">
+                    <Trash2 />
+                  </Button>} />
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Folder {activeItem?.name}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this folder? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <Button variant="destructive" onClick={async () => {
+                        if (activeItem) {
+                          await onDeleteFolder(activeItem.id);
+                          setDeleteDialogOpen(false);
+                        }
+                      }}>
+                        Delete Folder
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </div>
           <SidebarInput placeholder="Type to search..." />
         </SidebarHeader>

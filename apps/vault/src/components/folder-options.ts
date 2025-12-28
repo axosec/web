@@ -1,6 +1,6 @@
 import {
   Folder, Home, Wrench, Briefcase, Heart, Shield, FileText,
-  Zap, Star, GraduationCap, type LucideIcon
+  Zap, Star, GraduationCap, Cloud, Camera, Code, CreditCard, Globe, type LucideIcon
 } from "lucide-react";
 
 export const FOLDER_COLORS = [
@@ -11,6 +11,9 @@ export const FOLDER_COLORS = [
   { id: "amber", text: "text-amber-500", bg: "bg-amber-500" },
   { id: "purple", text: "text-purple-500", bg: "bg-purple-500" },
   { id: "pink", text: "text-pink-500", bg: "bg-pink-500" },
+  { id: "cyan", text: "text-cyan-500", bg: "bg-cyan-500" },
+  { id: "teal", text: "text-teal-500", bg: "bg-teal-500" },
+  { id: "indigo", text: "text-indigo-500", bg: "bg-indigo-500" },
 ];
 
 export const FOLDER_ICONS: { id: string, icon: LucideIcon }[] = [
@@ -24,6 +27,11 @@ export const FOLDER_ICONS: { id: string, icon: LucideIcon }[] = [
   { id: "idea", icon: Zap },
   { id: "star", icon: Star },
   { id: "school", icon: GraduationCap },
+  { id: "cloud", icon: Cloud },
+  { id: "camera", icon: Camera },
+  { id: "dev", icon: Code },
+  { id: "finance", icon: CreditCard },
+  { id: "web", icon: Globe },
 ];
 
 export interface FolderMetadata {
