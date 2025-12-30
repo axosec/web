@@ -24,13 +24,16 @@ export interface FolderSummary {
   key_nonce: string;
 }
 
+export type ItemType = 'login' | 'note' | 'card';
+
 export interface CreateItemRequest {
   folder_id: string | null;
-  type: string;
+  type: ItemType;
 
   // Data Blob
   data_nonce: string;
   enc_data: string;
+  overview_nonce: string;
   enc_overview: string;
 
   // Encryption Key
@@ -46,6 +49,7 @@ export interface ItemResponse {
 export interface ItemSummary {
   id: string;
   type: string;
+  overview_nonce: string;
   enc_overview: string;
   wrapped_key: string;
   key_nonce: string;
@@ -71,6 +75,7 @@ export interface ItemDetail {
 export interface UpdateItemRequest {
   nonce: string;
   enc_data: string;
+  overview_nonce: string;
   enc_overview: string;
 }
 

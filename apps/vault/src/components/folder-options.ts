@@ -1,3 +1,6 @@
+import type { FolderSummary } from "@repo/api/vault";
+import { Axosec } from "@repo/core";
+import { fromBase64 } from "@repo/core/utils";
 import {
   Folder, Home, Wrench, Briefcase, Heart, Shield, FileText,
   Zap, Star, GraduationCap, Cloud, Camera, Code, CreditCard, Globe, type LucideIcon
@@ -38,4 +41,62 @@ export interface FolderMetadata {
   name: string;
   icon: string;
   color: string;
+}
+
+export interface FolderNode {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  _key: Uint8Array;
+}
+
+export async function decryptFolders(
+  rawFolders: FolderSummary[],
+  userPrivateKey: Uint8Array
+): Promise<FolderNode[]> {
+  const axo = Axosec.getInstance();
+  const decryptedFolders: FolderNode[] = [];
+
+  await Promise.all(rawFolders.map(async (f) => {
+    try {
+      const folderKey = await axo.unwrapKey(
+        fromBase64(f.wrapped_key),
+        fromBase64(f.key_nonce),
+        userPrivateKey
+      );
+
+      const metaBytes = await axo.decrypt(
+        fromBase64(f.enc_metadata),
+        fromBase64(f.nonce),
+        folderKey
+      );
+
+      const plainText = new TextDecoder().decode(metaBytes);
+      let metadata: FolderMetadata;
+
+      try {
+        metadata = JSON.parse(plainText);
+      } catch (e) {
+        metadata = {
+          name: plainText,
+          icon: "default",
+          color: "default"
+        };
+      }
+
+      decryptedFolders.push({
+        id: f.id,
+        name: metadata.name,
+        icon: metadata.icon,
+        color: metadata.color,
+        _key: folderKey,
+      });
+
+    } catch (e) {
+      console.error(`Failed to decrypt folder ${f.id}`, e);
+    }
+  }));
+
+  return decryptedFolders;
 }

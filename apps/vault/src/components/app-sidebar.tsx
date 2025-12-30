@@ -1,6 +1,3 @@
-import type { FolderSummary } from "@repo/api/vault"
-import { Axosec } from "@repo/core";
-import { fromBase64 } from "@repo/core/utils";
 import { Button } from "@repo/ui/components/ui/button";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarInput, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@repo/ui/components/ui/sidebar";
 import { useEffect, useState } from "react";
@@ -8,65 +5,8 @@ import { ChevronsUpDown, Command, Folder, Inbox, Plus, Trash2, Pencil } from "lu
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@repo/ui/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@repo/ui/components/ui/alert-dialog";
 import { ThemeSelector } from "@repo/ui/components/theme-selector";
-import { FOLDER_COLORS, FOLDER_ICONS, type FolderMetadata } from "./folder-options";
-
-export interface FolderNode {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  _key: Uint8Array;
-}
-
-export async function decryptFolders(
-  rawFolders: FolderSummary[],
-  userPrivateKey: Uint8Array
-): Promise<FolderNode[]> {
-  const axo = Axosec.getInstance();
-  const decryptedFolders: FolderNode[] = [];
-
-  await Promise.all(rawFolders.map(async (f) => {
-    try {
-      const folderKey = await axo.unwrapKey(
-        fromBase64(f.wrapped_key),
-        fromBase64(f.key_nonce),
-        userPrivateKey
-      );
-
-      const metaBytes = await axo.decrypt(
-        fromBase64(f.enc_metadata),
-        fromBase64(f.nonce),
-        folderKey
-      );
-
-      const plainText = new TextDecoder().decode(metaBytes);
-      let metadata: FolderMetadata;
-
-      try {
-        metadata = JSON.parse(plainText);
-      } catch (e) {
-        metadata = {
-          name: plainText,
-          icon: "default",
-          color: "default"
-        };
-      }
-
-      decryptedFolders.push({
-        id: f.id,
-        name: metadata.name,
-        icon: metadata.icon,
-        color: metadata.color,
-        _key: folderKey,
-      });
-
-    } catch (e) {
-      console.error(`Failed to decrypt folder ${f.id}`, e);
-    }
-  }));
-
-  return decryptedFolders;
-}
+import { FOLDER_COLORS, FOLDER_ICONS, type FolderNode } from "./folder-options";
+import type { DecryptedItem } from "./item-options";
 
 export function AppSidebar({
   folders,
@@ -75,6 +15,10 @@ export function AppSidebar({
   onCreateFolder,
   onEditFolder,
   onDeleteFolder,
+  setViewType,
+  items,
+  selectedItem,
+  onSelectItem,
   ...props
 }: {
   folders: FolderNode[]
@@ -83,6 +27,10 @@ export function AppSidebar({
   onCreateFolder: () => void
   onEditFolder: (folder: FolderNode) => void
   onDeleteFolder: (folderId: string) => Promise<void>
+  setViewType: (type: 'show-item' | 'create-item' | 'edit-item') => void
+  items?: DecryptedItem[]
+  selectedItem?: DecryptedItem | null
+  onSelectItem?: (item: DecryptedItem) => void
 } & React.ComponentProps<typeof Sidebar>) {
   const { setOpen } = useSidebar()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -133,6 +81,12 @@ export function AppSidebar({
                         <Plus className="size-4 shrink-0" />
                       </div>
                       Create Folder
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setViewType('create-item')} className="gap-2 p-2">
+                      <div className="flex size-6 items-center justify-center rounded-sm border">
+                        <Plus className="size-4 shrink-0" />
+                      </div>
+                      Create Item
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>} />
@@ -221,10 +175,35 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-              <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground gap-2">
-                <Inbox className="h-10 w-10 opacity-20" />
-                <p className="text-sm">No items for now</p>
-              </div>
+              {items && items.length > 0 ? (
+                <SidebarMenu>
+                  {items.map((item) => {
+                    const IconComponent = FOLDER_ICONS.find((i) => i.id === item.icon)?.icon || Folder;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => onSelectItem?.(item)}
+                          isActive={selectedItem?.id === item.id}
+                          className="h-12 px-3"
+                        >
+                          <div className={`flex items-center justify-center size-8 rounded-md bg-${item.color}-500/10 text-${item.color}-500`}>
+                            <IconComponent className="size-4" />
+                          </div>
+                          <div className="flex flex-col gap-0.5 leading-none">
+                            <span className="font-medium">{item.title}</span>
+                            <span className="text-xs text-muted-foreground">{item.subtitle || item.type}</span>
+                          </div>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground gap-2">
+                  <Inbox className="h-10 w-10 opacity-20" />
+                  <p className="text-sm">No items for now</p>
+                </div>
+              )}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
