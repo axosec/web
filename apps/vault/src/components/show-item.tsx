@@ -4,7 +4,7 @@ import { Axosec } from "@repo/core";
 import { fromBase64 } from "@repo/core/utils";
 import { FOLDER_ICONS } from "./folder-options";
 import type { DecryptedItem } from "./item-options";
-import { Folder, Loader2, Copy, Eye, EyeOff, Trash2, ExternalLink } from "lucide-react";
+import { Folder, Loader2, Copy, Eye, EyeOff, Trash2, ExternalLink, Pencil } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import {
   AlertDialog,
@@ -70,7 +70,7 @@ function FieldRow({ label, value, type = "text", copyable = true }: { label: str
   );
 }
 
-export default function ShowItem({ item, onDelete }: { item: DecryptedItem, onDelete?: (id: string) => Promise<void> }) {
+export default function ShowItem({ item, onDelete, onEdit }: { item: DecryptedItem, onDelete?: (id: string) => Promise<void>, onEdit?: (item: DecryptedItem, details: any) => void }) {
   const [details, setDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -203,6 +203,12 @@ export default function ShowItem({ item, onDelete }: { item: DecryptedItem, onDe
         </div>
 
         <div className="flex gap-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={() => onEdit(item, details)}>
+              <Pencil className="size-4 mr-2" />
+              Edit
+            </Button>
+          )}
           {onDelete && (
             <AlertDialog>
               <AlertDialogTrigger render={

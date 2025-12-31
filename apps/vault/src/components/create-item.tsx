@@ -15,28 +15,35 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@repo/ui
 import { cn } from "@repo/ui/lib/utils";
 import { Check } from "lucide-react";
 
+import type { DecryptedItem } from "./item-options";
+
 interface CreateItemProps {
 	onSubmit: (type: ItemType, values: any) => Promise<void>
+	initialData?: DecryptedItem | null
+	initialDetails?: any
 }
 
-export default function CreateItem({ onSubmit }: CreateItemProps) {
-	const [activeType, setActiveType] = useState<ItemType>("login")
+export default function CreateItem({ onSubmit, initialData, initialDetails }: CreateItemProps) {
+	const [activeType, setActiveType] = useState<ItemType>((initialData?.type as ItemType) || "login")
 	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	const defaultValues = {
+		title: initialData?.title || "",
+		icon: initialData?.icon || "default",
+		color: initialData?.color || "default",
+		username: initialDetails?.username || "",
+		password: initialDetails?.password || "",
+		url: (initialDetails?.url as string[]) || [],
+		cardholder: initialDetails?.cardholder || "",
+		number: initialDetails?.number || "",
+		expiry: initialDetails?.expiry || "",
+		cvv: initialDetails?.cvv || "",
+		pin: initialDetails?.pin || "",
+		content: initialDetails?.content || "",
+	};
+
 	const form = useForm({
-		defaultValues: {
-			title: "",
-			icon: "default",
-			color: "default",
-			username: "",
-			password: "",
-			url: [] as string[],
-			cardholder: "",
-			number: "",
-			expiry: "",
-			cvv: "",
-			pin: "",
-			content: "",
-		},
+		defaultValues,
 		validators: {
 			onSubmit: ({ value }) => {
 				let schema = MetadataSchema;
@@ -71,6 +78,7 @@ export default function CreateItem({ onSubmit }: CreateItemProps) {
 
 	return (
 		<div>
+			<h1 className="text-2xl font-bold pb-2">{initialData ? "Update Item" : "Create Item"}</h1>
 			<Tabs value={activeType} onValueChange={(v) => setActiveType(v as ItemType)} className="w-full">
 				<TabsList className="grid w-full grid-cols-3 mb-4">
 					<TabsTrigger value="login"><Lock className="w-4 h-4 mr-2" /> Login</TabsTrigger>
@@ -449,7 +457,7 @@ export default function CreateItem({ onSubmit }: CreateItemProps) {
 				<Button type="submit" disabled={isSubmitting}>
 					{isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
 					<Save className="w-4 h-4 mr-2" />
-					Save Item
+					{initialData ? "Update Item" : "Save Item"}
 				</Button>
 			</form>
 		</div>

@@ -15,7 +15,7 @@ export function AppSidebar({
   onCreateFolder,
   onEditFolder,
   onDeleteFolder,
-  setViewType,
+  onCreateItem,
   items,
   selectedItem,
   onSelectItem,
@@ -27,7 +27,7 @@ export function AppSidebar({
   onCreateFolder: () => void
   onEditFolder: (folder: FolderNode) => void
   onDeleteFolder: (folderId: string) => Promise<void>
-  setViewType: (type: 'show-item' | 'create-item' | 'edit-item') => void
+  onCreateItem: () => void
   items?: DecryptedItem[]
   selectedItem?: DecryptedItem | null
   onSelectItem?: (item: DecryptedItem) => void
@@ -82,7 +82,7 @@ export function AppSidebar({
                       </div>
                       Create Folder
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setViewType('create-item')} className="gap-2 p-2">
+                    <DropdownMenuItem onClick={onCreateItem} className="gap-2 p-2">
                       <div className="flex size-6 items-center justify-center rounded-sm border">
                         <Plus className="size-4 shrink-0" />
                       </div>

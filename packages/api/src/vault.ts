@@ -73,7 +73,7 @@ export interface ItemDetail {
 }
 
 export interface UpdateItemRequest {
-  nonce: string;
+  data_nonce: string;
   enc_data: string;
   overview_nonce: string;
   enc_overview: string;

@@ -13,7 +13,6 @@ import type { FolderMetadata } from "../components/folder-options";
 import { decryptItems, type DecryptedItem } from "../components/item-options";
 import CreateItem from "../components/create-item";
 import ShowItem from "../components/show-item";
-import EditItem from "../components/edit-item";
 import { toast } from "sonner";
 
 const api = VaultApi.getInstance(import.meta.env.VITE_VAULT_API_URL);
@@ -25,9 +24,10 @@ export default function HomePage() {
   const [activeFolder, setActiveFolder] = useState<FolderNode | null>(null)
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<FolderNode | null>(null);
-  const [viewType, setViewType] = useState<'show-item' | 'create-item' | 'edit-item'>('create-item');
+  const [viewType, setViewType] = useState<'show-item' | 'create-item'>('create-item');
   const [items, setItems] = useState<DecryptedItem[]>([]);
   const [activeItem, setActiveItem] = useState<DecryptedItem | null>(null);
+  const [itemToEdit, setItemToEdit] = useState<{ item: DecryptedItem, details: any } | null>(null);
 
   const loadItems = async () => {
     if (!activeFolder) return;
@@ -189,6 +189,80 @@ export default function HomePage() {
     }
   };
 
+  const handleUpdateItem = async (type: ItemType, values: any) => {
+    if (!activeFolder || !privateKey || !itemToEdit) return;
+
+    try {
+      const itemKey = itemToEdit.item._key;
+
+      const overviewObj = {
+        title: values.title,
+        subtitle: type === "login" ? values.username
+          : type === "card" ? `Ends in ${values.number.slice(-4)}`
+            : "Secure Note",
+        icon: values.icon || "default",
+        color: values.color || "default",
+        type: type
+      };
+
+      let dataObj = {};
+
+      switch (type) {
+        case "login":
+          dataObj = {
+            username: values.username,
+            password: values.password,
+            url: values.url,
+            notes: values.notes
+          };
+          break;
+        case "card":
+          dataObj = {
+            cardholder: values.cardholder,
+            number: values.number,
+            expiry: values.expiry,
+            cvv: values.cvv,
+            pin: values.pin
+          };
+          break;
+        case "note":
+          dataObj = {
+            content: values.content
+          };
+          break;
+      }
+
+      const overviewBytes = new TextEncoder().encode(JSON.stringify(overviewObj));
+      const { data: encOverview, nonce: overviewNonce } = await axo.encrypt(overviewBytes, itemKey);
+
+      const dataBytes = new TextEncoder().encode(JSON.stringify(dataObj));
+      const { data: encData, nonce: dataNonce } = await axo.encrypt(dataBytes, itemKey);
+
+      await api.updateItem(itemToEdit.item.id, {
+        enc_overview: toBase64(encOverview),
+        overview_nonce: toBase64(overviewNonce),
+        enc_data: toBase64(encData),
+        data_nonce: toBase64(dataNonce),
+      });
+
+      toast.success("Item updated successfully");
+
+      await loadItems();
+
+      const updatedItem = {
+        ...itemToEdit.item,
+        ...overviewObj
+      };
+      setActiveItem(updatedItem);
+      setViewType('show-item');
+      setItemToEdit(null);
+
+    } catch (error) {
+      console.error("Failed to update item:", error);
+      toast.error("Failed to update item");
+    }
+  };
+
   const handleDeleteItem = async (id: string) => {
     try {
       await api.deleteResource(id, 'item');
@@ -217,7 +291,10 @@ export default function HomePage() {
         folders={decryptedFolders}
         activeItem={activeFolder}
         setActiveItem={setActiveFolder}
-        setViewType={setViewType}
+        onCreateItem={() => {
+          setItemToEdit(null);
+          setViewType('create-item');
+        }}
         onCreateFolder={() => {
           setFolderToEdit(null);
           setIsFolderDialogOpen(true);
@@ -259,9 +336,29 @@ export default function HomePage() {
           </Breadcrumb>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
-          {viewType === 'show-item' && activeItem && <ShowItem item={activeItem} onDelete={handleDeleteItem} />}
-          {viewType === 'create-item' && <>{activeFolder ? <CreateItem onSubmit={handleCreateItem} /> : <p>Folder not found</p>}</>}
-          {viewType === 'edit-item' && <EditItem />}
+          {viewType === 'show-item' && activeItem &&
+            <ShowItem
+              item={activeItem}
+              onDelete={handleDeleteItem}
+              onEdit={(item, details) => {
+                setItemToEdit({ item, details });
+                setViewType('create-item');
+              }}
+            />
+          }
+          {viewType === 'create-item' && (
+            <>
+              {activeFolder ? (
+                <CreateItem
+                  onSubmit={itemToEdit ? handleUpdateItem : handleCreateItem}
+                  initialData={itemToEdit?.item}
+                  initialDetails={itemToEdit?.details}
+                />
+              ) : (
+                <p>Folder not found</p>
+              )}
+            </>
+          )}
         </div>
       </SidebarInset>
       <CreateFolderDialog
