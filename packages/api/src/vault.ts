@@ -1,3 +1,5 @@
+import { Api } from "./api";
+
 export type ResourceType = 'folder' | 'item';
 
 export interface CreateFolderRequest {
@@ -95,12 +97,11 @@ export interface RevokeRequest {
   target_user_id: string;
 }
 
-export class VaultApi {
+export class VaultApi extends Api {
   private static instance: VaultApi;
-  private baseUrl: string;
 
   private constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+    super(baseUrl);
   }
 
   static getInstance(baseUrl: string): VaultApi {
@@ -108,34 +109,6 @@ export class VaultApi {
       VaultApi.instance = new VaultApi(baseUrl);
     }
     return VaultApi.instance;
-  }
-
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${this.baseUrl}/v1${endpoint}`, {
-      ...options,
-      headers: { "Content-Type": "application/json", ...options.headers },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `Request to ${endpoint} failed`);
-    }
-
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    const text = await response.text();
-    if (!text) {
-      return {} as T;
-    }
-
-    try {
-      return JSON.parse(text);
-    } catch {
-      return {} as T;
-    }
   }
 
   // Folder Operations

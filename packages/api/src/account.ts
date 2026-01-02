@@ -1,3 +1,5 @@
+import { Api } from "./api";
+
 export interface RegisterRequest {
   email: string;
   username: string;
@@ -30,6 +32,7 @@ export interface LoginRequest {
 export interface User {
   id: string;
   email: string;
+  email_hash: string;
   username: string;
 
   salt: string;
@@ -44,12 +47,26 @@ export interface User {
   vault_private_key_nonce: string;
 }
 
-export class AccountApi {
+export interface LookupUserRequest {
+  email_hash: string;
+}
+
+export interface LookupUsersRequest {
+  ids: string[];
+}
+
+export interface LookupUserResponse {
+  id: string;
+  username: string;
+  identity_public_key: string;
+  vault_public_key: string;
+}
+
+export class AccountApi extends Api {
   private static instance: AccountApi;
-  private baseUrl: string;
 
   private constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+    super(baseUrl);
   }
 
   static getInstance(baseUrl: string): AccountApi {
@@ -60,78 +77,49 @@ export class AccountApi {
   }
 
   async register(data: RegisterRequest) {
-    const response = await fetch(`${this.baseUrl}/v1/auth/register`, {
+    return this.request<User>(`/auth/register`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "Registration failed");
-    }
-
-    return await response.json();
   }
 
   async loginInit(data: InitLoginRequest): Promise<InitLoginResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/login/init`, {
+    return this.request<InitLoginResponse>(`/auth/login/init`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "Login initialization failed");
-    }
-
-    return await response.json();
   }
 
   async login(data: LoginRequest): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/login`, {
+    return this.request<User>(`/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "Login failed");
-    }
-
-    return await response.json();
   }
 
   async getSelf(): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/v1/user/self`, {
+    return this.request<User>(`/user/self`, {
       method: "GET",
-      credentials: "include"
     });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "Could not get self");
-    }
-
-    return await response.json();
   }
 
   async logout() {
-    const response = await fetch(`${this.baseUrl}/v1/user/logout`, {
+    return this.request<User>(`/user/logout`, {
       method: "POST",
-      credentials: "include"
     });
+  }
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "Could not logout");
-    }
+  async lookupUser(data: LookupUserRequest): Promise<LookupUserResponse> {
+    return this.request<LookupUserResponse>(`/user/lookup`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 
-    return await response.json();
+  async lookupUsers(data: LookupUsersRequest): Promise<LookupUserResponse[]> {
+    return this.request<LookupUserResponse[]>(`/users/lookup`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 }
